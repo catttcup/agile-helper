@@ -1,7 +1,7 @@
-import { User, BarChart3, Tag, RefreshCw, Check } from "lucide-react";
+import { User, BarChart3, Tag, RefreshCw, Check, Inbox } from "lucide-react";
 import CreateTaskModal from "../components/CreateTaskModal";
 import TaskDetailSheet from "../components/task/TaskDetailSheet";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   closestCorners,
@@ -23,7 +23,8 @@ import { CSS } from "@dnd-kit/utilities";
 const initialTasks = {
   todo: [
     {
-      id: "task-1",
+      id: "PLT-116",
+      sprintId: "1",
       title: "Настроить вход через Google",
       priority: "Высокий",
       points: 5,
@@ -34,7 +35,8 @@ const initialTasks = {
         "Интегрировать OAuth 2.0 для входа через Google. Настроить получение токена и сохранение сессии.",
     },
     {
-      id: "task-2",
+      id: "PLT-117",
+      sprintId: "1",
       title: "Добавить восстановление пароля",
       priority: "Средний",
       points: 3,
@@ -46,7 +48,8 @@ const initialTasks = {
   ],
   inProgress: [
     {
-      id: "task-3",
+      id: "PLT-118",
+      sprintId: "1",
       title: "Реализовать фильтры на доске",
       priority: "Высокий",
       points: 5,
@@ -59,8 +62,15 @@ const initialTasks = {
   ],
   review: [
     {
-      id: "task-4",
+      id: "PLT-119",
+      sprintId: "1",
       title: "Проверить доступность навигации",
+      checklist: [
+        { id: 1, text: "Множественный выбор исполнителей", completed: true },
+        { id: 2, text: "Комбинация фильтров и сброс", completed: true },
+        { id: 3, text: "Сохранение состояния в URL", completed: false },
+        { id: 4, text: "Клавиатурная навигация и тесты", completed: false },
+      ],
       priority: "Средний",
       points: 2,
       assignee: "АК",
@@ -71,7 +81,8 @@ const initialTasks = {
   ],
   done: [
     {
-      id: "task-5",
+      id: "PLT-120",
+      sprintId: "1",
       title: "Настроить CI/CD",
       priority: "Высокий",
       points: 5,
@@ -90,12 +101,29 @@ const sprints = [
   { id: "5", name: "Спринт 5" },
 ];
 
-export default function BoardPage({ onOpenAIWithTask }) {
+export default function BoardPage({
+  onOpenAIWithTask,
+  onTasksChange,
+  externalSelectedTask,
+  onCloseExternalTask,
+}) {
   const [currentSprint, setCurrentSprint] = useState("1");
   const [filterAssignee, setFilterAssignee] = useState(null);
   const [filterPriority, setFilterPriority] = useState(null);
   const [filterLabel, setFilterLabel] = useState(null);
   const [tasks, setTasks] = useState(initialTasks);
+  useEffect(() => {
+    if (onTasksChange) {
+      onTasksChange(tasks);
+    }
+  }, [tasks, onTasksChange]);
+
+  // 2. Если поиск выбрал задачу, открываем её на доске
+  useEffect(() => {
+    if (externalSelectedTask) {
+      setSelectedTask(externalSelectedTask);
+    }
+  }, [externalSelectedTask]);
   const [viewMode, setViewMode] = useState("scrum"); // 'scrum' или 'kanban'
   const [activeTask, setActiveTask] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -164,9 +192,28 @@ export default function BoardPage({ onOpenAIWithTask }) {
     }
   };
 
+  // Функция для генерации ID вида PLT-131
+  const generateTaskId = () => {
+    // Собираем все задачи со всех колонок
+    const allTasks = Object.values(tasks).flat();
+
+    // Ищем максимальный номер среди существующих задач
+    let maxNumber = 120; // Начинаем со 120, чтобы твои старые задачи (task-1) не мешали
+
+    allTasks.forEach((task) => {
+      if (task.id.startsWith("PLT-")) {
+        const num = parseInt(task.id.split("-")[1], 10);
+        if (num > maxNumber) maxNumber = num;
+      }
+    });
+
+    // Возвращаем новый ID (следующий по порядку)
+    return `PLT-${maxNumber + 1}`;
+  };
+
   const handleCreateTask = (taskData, columnId) => {
     const newTask = {
-      id: `task-${Date.now()}`,
+      id: generateTaskId(),
       sprintId: currentSprint,
       ...taskData, // Распаковываем все данные, пришедшие из модалки
     };
@@ -175,6 +222,26 @@ export default function BoardPage({ onOpenAIWithTask }) {
       ...prev,
       [columnId]: [newTask, ...prev[columnId]],
     }));
+  };
+
+  const handleToggleChecklist = (taskId, checklistItemId) => {
+    setTasks((prev) => {
+      const newTasks = { ...prev };
+      for (const col in newTasks) {
+        const taskIndex = newTasks[col].findIndex((t) => t.id === taskId);
+        if (taskIndex !== -1) {
+          const task = newTasks[col][taskIndex];
+          const updatedChecklist = task.checklist.map((item) =>
+            item.id === checklistItemId
+              ? { ...item, completed: !item.completed }
+              : item,
+          );
+          newTasks[col][taskIndex] = { ...task, checklist: updatedChecklist };
+          break;
+        }
+      }
+      return newTasks;
+    });
   };
 
   const handleAddComment = (taskId, text) => {
@@ -216,10 +283,8 @@ export default function BoardPage({ onOpenAIWithTask }) {
   // Функция фильтрации задач
   const getFilteredTasks = (columnTasks) => {
     return columnTasks.filter((task) => {
-      // Фильтр по спринту! (Если у задачи нет спринта или он совпадает с текущим)
-      const matchSprint =
-        task.sprintId === currentSprint ||
-        (!task.sprintId && currentSprint === "1");
+      // Теперь просто сравниваем ID. Никаких хардкодов "12" и проверок на отсутствие!
+      const matchSprint = task.sprintId === currentSprint;
 
       const matchAssignee = filterAssignee
         ? task.assignee === filterAssignee
@@ -238,20 +303,17 @@ export default function BoardPage({ onOpenAIWithTask }) {
   // Считаем общее количество SP и выполненные
   const currentSprintTasks = Object.values(tasks)
     .flat()
-    .filter(
-      (t) =>
-        t.sprintId === currentSprint || (!t.sprintId && currentSprint === "12"),
-    );
+    .filter((t) => t.sprintId === currentSprint);
+
   const totalSP = currentSprintTasks.reduce(
     (sum, task) => sum + Number(task.points || 0),
     0,
   );
+
   const doneSP = tasks.done
-    .filter(
-      (t) =>
-        t.sprintId === currentSprint || (!t.sprintId && currentSprint === "12"),
-    )
+    .filter((t) => t.sprintId === currentSprint)
     .reduce((sum, task) => sum + Number(task.points || 0), 0);
+
   const progressPercent =
     totalSP === 0 ? 0 : Math.round((doneSP / totalSP) * 100);
 
@@ -449,39 +511,41 @@ export default function BoardPage({ onOpenAIWithTask }) {
       </div>
 
       {/* Плашка прогресса спринта */}
-      <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-6 flex items-center justify-between">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-gray-900">
-              Спринт {currentSprint}
-            </span>{" "}
-            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded">
-              Активен
-            </span>
-            <span className="text-sm text-gray-500">12–23 октября</span>
-          </div>
-          <span className="text-sm text-gray-500">
-            Цель: сделать работу с доской быстрой и предсказуемой
-          </span>
-        </div>
-
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col items-end gap-1">
-            <span className="text-sm text-gray-500 font-medium">
-              {doneSP} из {totalSP} SP завершено - {progressPercent}%
-            </span>
-            <div className="w-48 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-green-500 rounded-full transition-all duration-500"
-                style={{ width: `${progressPercent}%` }}
-              ></div>
+      {viewMode === "scrum" && (
+        <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-6 flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-gray-900">
+                Спринт {currentSprint}
+              </span>{" "}
+              <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                Активен
+              </span>
+              <span className="text-sm text-gray-500">12–23 октября</span>
             </div>
+            <span className="text-sm text-gray-500">
+              Цель: сделать работу с доской быстрой и предсказуемой
+            </span>
           </div>
-          <button className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
-            Завершить спринт
-          </button>
+
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-sm text-gray-500 font-medium">
+                {doneSP} из {totalSP} SP завершено - {progressPercent}%
+              </span>
+              <div className="w-48 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-green-500 rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                ></div>
+              </div>
+            </div>
+            <button className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
+              Завершить спринт
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <DndContext
         sensors={sensors}
@@ -536,17 +600,23 @@ export default function BoardPage({ onOpenAIWithTask }) {
           />
         </div>
         <TaskDetailSheet
-          isOpen={!!selectedTask}
-          onClose={() => setSelectedTask(null)}
+          isOpen={!!(selectedTask || externalSelectedTask)}
+          onClose={() => {
+            setSelectedTask(null);
+            if (onCloseExternalTask) onCloseExternalTask();
+          }}
           task={
-            selectedTask
+            selectedTask || externalSelectedTask
               ? Object.values(tasks)
                   .flat()
-                  .find((t) => t.id === selectedTask.id)
+                  .find(
+                    (t) => t.id === (selectedTask || externalSelectedTask).id,
+                  )
               : null
           }
           onAskAI={onOpenAIWithTask}
           onAddComment={handleAddComment}
+          onToggleChecklist={handleToggleChecklist}
         />
         {/* Модалка создания задачи */}
         <CreateTaskModal
@@ -590,13 +660,30 @@ function BoardColumn({ id, title, color, tasks, onTaskClick, onAddClick }) {
         items={tasks.map((t) => t.id)}
         strategy={verticalListSortingStrategy}
       >
-        {tasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onClick={() => onTaskClick(task)}
-          />
-        ))}
+        {tasks.length === 0 ? (
+          // красивая заглушка
+          <div className="flex flex-col items-center justify-center py-10 opacity-60">
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mb-3">
+              <Inbox size={20} className="text-gray-400" />
+            </div>
+            <p className="text-sm text-gray-500 font-medium mb-1">Нет задач</p>
+            <button
+              onClick={onAddClick}
+              className="text-xs text-indigo-500 hover:text-indigo-700 font-medium"
+            >
+              + Создать первую
+            </button>
+          </div>
+        ) : (
+          // Если задачи есть — выводим их
+          tasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onClick={() => onTaskClick(task)}
+            />
+          ))
+        )}
       </SortableContext>
 
       <button
@@ -609,7 +696,6 @@ function BoardColumn({ id, title, color, tasks, onTaskClick, onAddClick }) {
   );
 }
 
-// Компонент карточки
 // Компонент карточки
 function TaskCard({ task, isOverlay, onClick }) {
   const {
@@ -708,11 +794,31 @@ function TaskCard({ task, isOverlay, onClick }) {
           </span>
 
           {/* Дедлайн */}
-          {task.deadline && (
-            <span className="text-xs text-orange-400 flex items-center gap-1">
-              ⏱ {formatShortDate(task.deadline)}
-            </span>
-          )}
+          {/* Дедлайн */}
+          {task.deadline &&
+            (() => {
+              // Получаем сегодняшнюю дату без времени (чтобы сравнение было честным)
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+
+              const deadlineDate = new Date(task.deadline);
+              deadlineDate.setHours(0, 0, 0, 0);
+
+              // Считаем разницу в днях
+              const diffTime = deadlineDate - today;
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+              // Если дедлайн прошел (diffDays < 0) ИЛИ осталось 3 дня и меньше — красный. Иначе оранжевый.
+              const isUrgent = diffDays <= 3;
+
+              return (
+                <span
+                  className={`text-xs flex items-center gap-1 ${isUrgent ? "text-rose-400 font-medium" : "text-orange-400"}`}
+                >
+                  ⏱ {formatShortDate(task.deadline)}
+                </span>
+              );
+            })()}
         </div>
 
         {/* Аватар исполнителя */}

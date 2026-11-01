@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Sparkles, X } from "lucide-react";
 
 export default function AIChatPanel({ isOpen, onClose, contextTask }) {
   const [messages, setMessages] = useState([]);
@@ -59,7 +60,7 @@ export default function AIChatPanel({ isOpen, onClose, contextTask }) {
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#f8f9fa]">
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="text-xl">✨</span>
+              <Sparkles size={18} className="text-gray-500" />{" "}
               <h2 className="font-bold text-gray-900">ИИ-Ассистент</h2>
             </div>
             {contextTask && (
@@ -70,9 +71,9 @@ export default function AIChatPanel({ isOpen, onClose, contextTask }) {
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 text-2xl leading-none"
+            className="text-gray-400 hover:text-gray-700 p-1 hover:bg-gray-100 rounded transition-colors"
           >
-            ×
+            <X size={20} /> {/* <--- Красивый крестик вместо текстового "×" */}
           </button>
         </div>
 

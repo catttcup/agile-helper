@@ -19,6 +19,7 @@ export default function TaskDetailSheet({
   task,
   onAskAI,
   onAddComment,
+  onToggleChecklist,
 }) {
   const [commentText, setCommentText] = useState("");
 
@@ -199,15 +200,55 @@ export default function TaskDetailSheet({
 
           <hr className="border-gray-100" />
 
-          {/* Критерии и Вложения (заглушки) */}
-          <div className="text-sm text-gray-500 flex flex-col gap-4 pb-4">
-            <div className="flex justify-between items-center">
+          {/* Критерии готовности (Чеклист) */}
+          <hr className="border-gray-100" />
+          <div className="flex flex-col gap-3 pb-4">
+            <div className="flex justify-between items-center mb-1">
               <h3 className="font-bold text-gray-900">Критерии готовности</h3>
-              <span className="text-xs text-gray-400">0 из 0</span>
+              <span className="text-xs text-gray-400">
+                {task.checklist?.filter((c) => c.completed).length || 0} из{" "}
+                {task.checklist?.length || 0}
+              </span>
             </div>
-            <div className="flex justify-between items-center">
-              <h3 className="font-bold text-gray-900">Вложения</h3>
-              <span className="text-xs text-gray-400">0</span>
+
+            {/* Полоска прогресса чеклиста */}
+            {task.checklist && task.checklist.length > 0 && (
+              <div className="w-full h-1 bg-gray-100 rounded-full mb-2 overflow-hidden">
+                <div
+                  className="h-full bg-indigo-500 rounded-full transition-all"
+                  style={{
+                    width: `${(task.checklist.filter((c) => c.completed).length / task.checklist.length) * 100}%`,
+                  }}
+                ></div>
+              </div>
+            )}
+
+            {/* Список пунктов */}
+            <div className="flex flex-col gap-2">
+              {task.checklist && task.checklist.length > 0 ? (
+                task.checklist.map((item) => (
+                  <label
+                    key={item.id}
+                    className="flex items-start gap-3 cursor-pointer group"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={item.completed}
+                      onChange={() => onToggleChecklist(task.id, item.id)}
+                      className="mt-0.5 w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
+                    />
+                    <span
+                      className={`text-sm ${item.completed ? "text-gray-400 line-through" : "text-gray-700"}`}
+                    >
+                      {item.text}
+                    </span>
+                  </label>
+                ))
+              ) : (
+                <p className="text-sm text-gray-400">
+                  Нет критериев готовности.
+                </p>
+              )}
             </div>
           </div>
 

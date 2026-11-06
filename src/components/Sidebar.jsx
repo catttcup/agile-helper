@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   Folder,
   LayoutDashboard,
@@ -14,14 +15,15 @@ import {
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
 
   const menuItems = [
-    { icon: Folder, label: "Проекты" },
-    { icon: LayoutDashboard, label: "Доска", active: true },
-    { icon: ListTodo, label: "Бэклог" },
-    { icon: RefreshCw, label: "Спринты" },
-    { icon: BarChart2, label: "Аналитика" },
-    { icon: Settings, label: "Настройки" },
+    { icon: Folder, label: "Проекты", path: "/projects" },
+    { icon: LayoutDashboard, label: "Доска", path: "/" },
+    { icon: ListTodo, label: "Бэклог", path: "/backlog" },
+    { icon: RefreshCw, label: "Спринты", path: "/sprints" },
+    { icon: BarChart2, label: "Аналитика", path: "/analytics" },
+    { icon: Settings, label: "Настройки", path: "/settings" },
   ];
 
   return (
@@ -44,23 +46,26 @@ export default function Sidebar() {
 
       {/* Навигация */}
       <nav className="flex flex-col gap-1 px-3 flex-1">
-        {menuItems.map((item, index) => (
-          <a
-            key={index}
-            href="#"
-            title={isCollapsed ? item.label : undefined}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-              item.active
-                ? "bg-indigo-50 text-indigo-700 font-medium"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            } ${isCollapsed ? "justify-center" : ""}`}
-          >
-            <item.icon size={20} className="shrink-0" />
-            {!isCollapsed && (
-              <span className="whitespace-nowrap">{item.label}</span>
-            )}
-          </a>
-        ))}
+        {menuItems.map((item, index) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <Link
+              key={index}
+              to={item.path}
+              title={isCollapsed ? item.label : undefined}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                isActive
+                  ? "bg-indigo-50 text-indigo-700 font-medium"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              } ${isCollapsed ? "justify-center" : ""}`}
+            >
+              <item.icon size={20} className="shrink-0" />
+              {!isCollapsed && (
+                <span className="whitespace-nowrap">{item.label}</span>
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Нижняя часть */}
@@ -77,11 +82,10 @@ export default function Sidebar() {
         {!isCollapsed && (
           <button className="flex items-center gap-3 px-3 py-2 text-sm text-gray-400 hover:text-gray-700 transition-colors">
             <HelpCircle size={16} className="shrink-0" />
-            <span className="whitespace-nowrap">Помощь и сочетания клавиш</span>
+            <span className="whitespace-nowrap">Помощь</span>
           </button>
         )}
 
-        {/* Кнопка сворачивания */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={`flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-gray-700 transition-colors mt-2 ${isCollapsed ? "justify-center" : ""}`}

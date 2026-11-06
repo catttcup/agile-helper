@@ -20,7 +20,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 // Начальные данные (имитация бэкенда)
-const initialTasks = {
+export const initialTasks = {
   todo: [
     {
       id: "PLT-116",
@@ -103,7 +103,8 @@ const sprints = [
 
 export default function BoardPage({
   onOpenAIWithTask,
-  onTasksChange,
+  tasks,
+  setTasks,
   externalSelectedTask,
   onCloseExternalTask,
 }) {
@@ -111,12 +112,6 @@ export default function BoardPage({
   const [filterAssignee, setFilterAssignee] = useState(null);
   const [filterPriority, setFilterPriority] = useState(null);
   const [filterLabel, setFilterLabel] = useState(null);
-  const [tasks, setTasks] = useState(initialTasks);
-  useEffect(() => {
-    if (onTasksChange) {
-      onTasksChange(tasks);
-    }
-  }, [tasks, onTasksChange]);
 
   // 2. Если поиск выбрал задачу, открываем её на доске
   useEffect(() => {

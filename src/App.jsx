@@ -1,18 +1,42 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import AIChatPanel from "./components/ai/AIChatPanel";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
-import BoardPage, { initialTasks } from "./pages/Boardpage";
+
+import BoardPage from "./pages/Boardpage";
 import BacklogPage from "./pages/BacklogPage";
+import CalendarPage from "./pages/CalendarPage";
+import GanttPage from "./pages/GanttPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import SettingsPage from "./pages/SettingsPage";
+
+import { getTasks } from "./services/tasksService";
+
+const emptyTasks = {
+  todo: [],
+  inProgress: [],
+  review: [],
+  done: [],
+};
 
 function App() {
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [aiContext, setAiContext] = useState(null);
-  const [globalTasks, setGlobalTasks] = useState(initialTasks);
+  const [globalTasks, setGlobalTasks] = useState(emptyTasks);
   const [selectedTask, setSelectedTask] = useState(null);
+
+  // Загружаем задачи из моков через сервис
+  useEffect(() => {
+    getTasks()
+      .then((loadedTasks) => {
+        setGlobalTasks(loadedTasks);
+      })
+      .catch((error) => {
+        console.error("ОШИБКА ЗАГРУЗКИ ЗАДАЧ:", error);
+      });
+  }, []);
 
   const handleOpenAIGlobal = () => {
     setAiContext(null);
@@ -28,6 +52,7 @@ function App() {
     <BrowserRouter>
       <div className="flex h-screen w-screen bg-white font-sans text-gray-900">
         <Sidebar />
+
         <div className="flex-1 flex flex-col min-w-0 h-full bg-gray-50/30">
           <Topbar
             onOpenAI={handleOpenAIGlobal}
@@ -60,7 +85,18 @@ function App() {
                 }
               />
 
+              <Route
+                path="/calendar"
+                element={<CalendarPage tasks={globalTasks} />}
+              />
+
+              <Route
+                path="/gantt"
+                element={<GanttPage tasks={globalTasks} />}
+              />
+
               <Route path="/analytics" element={<AnalyticsPage />} />
+
               <Route path="/settings" element={<SettingsPage />} />
 
               <Route

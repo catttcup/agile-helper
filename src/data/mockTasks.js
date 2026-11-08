@@ -1,0 +1,111 @@
+
+export const mockTasks = [
+  {
+    id: "PLT-116",
+    title: "Настроить вход через Google",
+    priority: "High",
+    status: "todo",
+    sprintId: "1",
+    points: 5,
+    assignee: "АК",
+    labels: ["Frontend", "Auth"],
+    deadline: "2026-11-05",
+    description:
+      "Интегрировать OAuth 2.0 для входа через Google. Настроить получение токена и сохранение сессии.",
+  },
+  {
+    id: "PLT-117",
+    title: "Добавить восстановление пароля",
+    priority: "Medium",
+    status: "todo",
+    sprintId: "1",
+    points: 3,
+    assignee: "МС",
+    labels: ["Backend", "Auth"],
+    deadline: "2026-11-07",
+    description:
+      "Реализовать отправку письма со ссылкой для сброса пароля.",
+  },
+  {
+    id: "PLT-118",
+    title: "Реализовать фильтры на доске",
+    priority: "High",
+    status: "inProgress",
+    sprintId: "1",
+    points: 5,
+    assignee: "АК",
+    labels: ["Frontend", "UX"],
+    deadline: "2026-11-10",
+    description:
+      "Добавить фильтры по исполнителю, приоритету, меткам и спринту.",
+  },
+  {
+    id: "PLT-119",
+    title: "Проверить доступность навигации",
+    priority: "Medium",
+    status: "review",
+    sprintId: "1",
+    points: 2,
+    assignee: "ДК",
+    labels: ["UX", "A11y"],
+    deadline: "2026-11-12",
+    description:
+      "Проверить контрастность, фокус и клавиатурную навигацию.",
+    checklist: [
+      {
+        id: 1,
+        text: "Проверить контрастность",
+        completed: true,
+      },
+      {
+        id: 2,
+        text: "Проверить фокус элементов",
+        completed: false,
+      },
+      {
+        id: 3,
+        text: "Проверить клавиатурную навигацию",
+        completed: false,
+      },
+    ],
+  },
+  {
+    id: "PLT-120",
+    title: "Настроить CI/CD",
+    priority: "High",
+    status: "done",
+    sprintId: "1",
+    points: 5,
+    assignee: "МС",
+    labels: ["DevOps"],
+    deadline: "2026-11-14",
+    description:
+      "Настроить автоматическую сборку и деплой приложения.",
+  },
+  {
+    id: "PLT-121",
+    title: "Обновить UI-kit",
+    priority: "Low",
+    status: "todo",
+    sprintId: "1",
+    points: 2,
+    assignee: "МС",
+    labels: ["Design", "Frontend"],
+    deadline: "2026-11-03",
+    description:
+      "Обновить компоненты интерфейса и привести их к единому стилю.",
+  },
+  {
+    id: "PLT-122",
+    title: "Подготовить релиз",
+    priority: "High",
+    status: "inProgress",
+    sprintId: "1",
+    points: 8,
+    assignee: "ДК",
+    labels: ["Release"],
+    deadline: "2026-11-05",
+    description:
+      "Подготовить приложение к релизу и проверить основные сценарии.",
+  },
+];

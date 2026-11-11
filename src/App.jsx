@@ -8,6 +8,7 @@ import Topbar from "./components/Topbar";
 import BoardPage from "./pages/Boardpage";
 import BacklogPage from "./pages/BacklogPage";
 import CalendarPage from "./pages/CalendarPage";
+import SprintsPage from "./pages/SprintsPage";
 import GanttPage from "./pages/GanttPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -95,7 +96,10 @@ function App() {
                 element={<GanttPage tasks={globalTasks} />}
               />
 
-              <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route
+                path="/analytics"
+                element={<AnalyticsPage tasks={globalTasks} />}
+              />
 
               <Route path="/settings" element={<SettingsPage />} />
 
@@ -111,9 +115,7 @@ function App() {
               <Route
                 path="/sprints"
                 element={
-                  <div className="p-6 text-gray-500">
-                    Спринты скоро появятся
-                  </div>
+                  <SprintsPage tasks={globalTasks} setTasks={setGlobalTasks} />
                 }
               />
             </Routes>
